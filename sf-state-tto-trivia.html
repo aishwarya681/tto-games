@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>San Francisco State University — Tech Transfer Trivia</title>
+<style>
+  :root{
+    --nau-blue:#52247F;
+    --nau-blue-light:#78549B;
+    --nau-gold:#FFCF01;
+    --teal:#0f9d9d;
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --found:#3fbf7f;
+    --wrong:#e0554f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background:linear-gradient(180deg,var(--nau-blue) 0%, var(--nau-blue-light) 220px, var(--bg) 220px);
+    color:#1a1a2e;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+  }
+  header{
+    text-align:center;
+    color:#fff;
+    margin-bottom:22px;
+  }
+  header h1{
+    font-size:1.6rem;
+    margin:0 0 8px;
+    letter-spacing:.3px;
+  }
+  header .badge{
+    display:inline-block;
+    background:var(--nau-gold);
+    color:var(--nau-blue);
+    font-weight:700;
+    font-size:.72rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding:4px 12px;
+    border-radius:20px;
+    margin-bottom:10px;
+  }
+  header p.subtitle{
+    margin:0 auto;
+    max-width:520px;
+    font-size:.95rem;
+    opacity:.9;
+    line-height:1.4;
+  }
+  .stats{
+    display:flex;
+    justify-content:center;
+    gap:18px;
+    margin-top:14px;
+    font-weight:600;
+  }
+  .stats span{
+    background:rgba(255,255,255,.12);
+    padding:6px 14px;
+    border-radius:8px;
+    font-size:.85rem;
+  }
+  .main{
+    background:var(--card);
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,20,60,.12);
+    padding:30px 28px;
+  }
+  .progress-dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:22px;
+  }
+  .progress-dots .dot{
+    width:10px;height:10px;
+    border-radius:50%;
+    background:#e2e6f0;
+    transition:background .2s;
+  }
+  .progress-dots .dot.answered{
+    background:var(--found);
+  }
+  .progress-dots .dot.current{
+    background:var(--nau-gold);
+  }
+  .q-tag{
+    text-align:center;
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:6px;
+  }
+  .q-text{
+    text-align:center;
+    font-size:1.15rem;
+    font-weight:700;
+    color:var(--nau-blue);
+    margin:0 0 22px;
+    line-height:1.4;
+  }
+  .options{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .option{
+    background:#eef1f8;
+    border:2px solid transparent;
+    border-radius:10px;
+    padding:14px 12px;
+    font-size:.92rem;
+    font-weight:600;
+    color:#2c2c3a;
+    cursor:pointer;
+    text-align:center;
+    transition:background .15s, border-color .15s, transform .1s;
+  }
+  .option:hover:not(.disabled){
+    border-color:var(--nau-blue);
+    transform:translateY(-1px);
+  }
+  .option.correct{
+    background:var(--found);
+    color:#fff;
+  }
+  .option.wrong{
+    background:var(--wrong);
+    color:#fff;
+  }
+  .option.disabled{
+    cursor:default;
+    opacity:.85;
+  }
+  .feedback{
+    text-align:center;
+    min-height:22px;
+    margin-top:16px;
+    font-size:.88rem;
+    font-weight:600;
+  }
+  .feedback.ok{ color:var(--found); }
+  .feedback.no{ color:var(--wrong); }
+  .hint{
+    text-align:center;
+    margin-top:10px;
+    font-size:.78rem;
+    color:#7a8090;
+    line-height:1.4;
+  }
+  @media (max-width:480px){
+    .options{ grid-template-columns:1fr; }
+  }
+  .unlock{
+    position:fixed;
+    inset:0;
+    background:rgba(0,15,45,.72);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .unlock.hidden{ display:none; }
+  .unlock-card{
+    background:#fff;
+    border-radius:18px;
+    max-width:520px;
+    width:100%;
+    padding:34px 30px;
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    position:relative;
+    z-index:2;
+  }
+  .unlock-card h2{
+    color:var(--nau-blue);
+    margin:0 0 6px;
+    font-size:1.35rem;
+  }
+  .unlock-card .time-badge{
+    display:inline-block;
+    margin-bottom:14px;
+    background:#eef1f8;
+    color:var(--nau-blue);
+    font-size:.78rem;
+    font-weight:700;
+    padding:4px 12px;
+    border-radius:20px;
+  }
+  .unlock-card p{
+    font-size:.95rem;
+    line-height:1.55;
+    color:#333;
+    text-align:left;
+  }
+  .points{
+    text-align:left;
+    margin:16px 0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .points div{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    font-size:.9rem;
+    line-height:1.4;
+  }
+  .points div .qdot{
+    flex:0 0 auto;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--nau-gold);
+    color:var(--nau-blue);
+    font-weight:800;
+    font-size:.78rem;
+    display:flex;align-items:center;justify-content:center;
+    margin-top:1px;
+  }
+  .cta{
+    display:inline-block;
+    margin-top:18px;
+    background:var(--nau-blue);
+    color:#fff;
+    text-decoration:none;
+    font-weight:700;
+    padding:12px 26px;
+    border-radius:10px;
+    font-size:.92rem;
+    transition:background .15s;
+  }
+  .cta:hover{ background:var(--nau-blue-light); }
+  .confetti-piece{
+    position:fixed;
+    top:-10px;
+    width:9px;height:14px;
+    z-index:1;
+    opacity:.9;
+    border-radius:2px;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform:translateY(105vh) rotate(400deg); opacity:.3; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge">Built for San Francisco State University</div>
+    <h1>Tech Transfer Trivia</h1>
+    <p class="subtitle">Answer 5 quick questions correctly to unlock something built specifically for SF State's team.</p>
+    <div class="stats">
+      <span id="timer">00:00</span>
+      <span id="qCount">Question 1/5</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="q-tag" id="qTag">Disclosures</div>
+    <p class="q-text" id="qText"></p>
+    <div class="options" id="options"></div>
+    <p class="feedback" id="feedback"></p>
+    <p class="hint">Pick an answer — if it's not quite right, just try again.</p>
+  </div>
+</div>
+
+<div id="unlock" class="unlock hidden">
+  <div class="unlock-card">
+    <div class="time-badge" id="finalTime">Solved in 00:00</div>
+    <h2>🔓 Unlocked for SF State's Gators</h2>
+    <p>Given SF State's president just declared a fiscal emergency and is cutting about $25M from next year's budget, I imagine proving ROI on every dollar of research spend, including what your office manages, just got a lot more visible.</p>
+    <div class="points">
+      <div><span class="qdot">?</span> <span>What if new disclosures didn't sit in a queue waiting on one person's bandwidth?</span></div>
+      <div><span class="qdot">?</span> <span>What if the prior art and IP landscaping behind every patent decision took hours instead of weeks?</span></div>
+      <div><span class="qdot">?</span> <span>What if licensing conversations moved at the speed of the deal, not the speed of your inbox?</span></div>
+      <div><span class="qdot">?</span> <span>What if supporting more faculty startups didn't mean adding headcount?</span></div>
+    </div>
+    <p>So if you're beginning to ask yourself these questions, I'd love to talk!</p>
+    <a class="cta" href="mailto:aishwarya@tradespace.io?subject=SF%20State%20Tech%20Transfer%20-%20Quick%20Chat&body=Hi%20Aishwarya%2C%0A%0AI%20solved%20the%20trivia%20-%20let%27s%20talk%20about%20how%20Tradespace%20could%20help%20our%20team.">Let's talk →</a>
+  </div>
+</div>
+
+<script>
+  // 4 questions map to the core TTO functions, 5th is a mascot bonus round
+  const QUESTIONS = [
+    {
+      tag: "Disclosures",
+      text: "What's the first formal step when faculty research turns into potential IP?",
+      options: ["Patent filing", "Invention disclosure", "Licensing negotiation", "Startup incorporation"],
+      correct: 1
+    },
+    {
+      tag: "Patents",
+      text: "Before filing a patent, what do TTOs search to see if an invention is already known?",
+      options: ["Market research", "Grant database", "Prior art", "Trademark registry"],
+      correct: 2
+    },
+    {
+      tag: "Licensing",
+      text: "What's the agreement called that lets a company legally use a university's patented technology?",
+      options: ["NDA", "License agreement", "MOU", "Term sheet"],
+      correct: 1
+    },
+    {
+      tag: "Startups",
+      text: "What do you call a new company formed specifically to commercialize university research?",
+      options: ["Consortium", "Incubator", "Startup / spinout", "Joint venture"],
+      correct: 2
+    },
+    {
+      tag: "Bonus round 🐊",
+      text: "What's SF State's mascot?",
+      options: ["Gators", "Panthers", "Aggies", "Salukis"],
+      correct: 0
+    }
+  ];
+
+  let currentIndex = 0;
+  let timerInterval = null;
+  let seconds = 0;
+  let started = false;
+
+  function startTimer(){
+    if(started) return;
+    started = true;
+    timerInterval = setInterval(() => {
+      seconds++;
+      const m = String(Math.floor(seconds/60)).padStart(2,'0');
+      const s = String(seconds%60).padStart(2,'0');
+      document.getElementById('timer').textContent = `${m}:${s}`;
+    }, 1000);
+  }
+
+  function stopTimer(){
+    clearInterval(timerInterval);
+  }
+
+  function renderDots(){
+    const wrap = document.getElementById('progressDots');
+    wrap.innerHTML = '';
+    QUESTIONS.forEach((_, i) => {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      if(i < currentIndex) dot.classList.add('answered');
+      if(i === currentIndex) dot.classList.add('current');
+      wrap.appendChild(dot);
+    });
+  }
+
+  function renderQuestion(){
+    const q = QUESTIONS[currentIndex];
+    document.getElementById('qCount').textContent = `Question ${currentIndex+1}/${QUESTIONS.length}`;
+    document.getElementById('qTag').textContent = q.tag;
+    document.getElementById('qText').textContent = q.text;
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+    renderDots();
+
+    const optionsEl = document.getElementById('options');
+    optionsEl.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('div');
+      btn.className = 'option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => handleAnswer(i, btn));
+      optionsEl.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(i, btn){
+    if(btn.classList.contains('disabled')) return;
+    startTimer();
+    const q = QUESTIONS[currentIndex];
+    const feedback = document.getElementById('feedback');
+
+    if(i === q.correct){
+      btn.classList.add('correct', 'disabled');
+      document.querySelectorAll('.option').forEach(o => o.classList.add('disabled'));
+      feedback.textContent = 'Correct!';
+      feedback.className = 'feedback ok';
+      setTimeout(nextQuestion, 700);
+    } else {
+      btn.classList.add('wrong', 'disabled');
+      feedback.textContent = 'Not quite — try again.';
+      feedback.className = 'feedback no';
+    }
+  }
+
+  function nextQuestion(){
+    currentIndex++;
+    if(currentIndex >= QUESTIONS.length){
+      finishQuiz();
+      return;
+    }
+    renderQuestion();
+  }
+
+  function finishQuiz(){
+    stopTimer();
+    renderDots();
+    document.getElementById('qCount').textContent = `Question ${QUESTIONS.length}/${QUESTIONS.length}`;
+    const m = String(Math.floor(seconds/60)).padStart(2,'0');
+    const s = String(seconds%60).padStart(2,'0');
+    document.getElementById('finalTime').textContent = `Solved in ${m}:${s}`;
+    setTimeout(() => {
+      document.getElementById('unlock').classList.remove('hidden');
+      launchConfetti();
+    }, 400);
+  }
+
+  function launchConfetti(){
+    const colors = ['#FFCF01','#52247F','#0f9d9d','#3fbf7f','#ffffff'];
+    for(let i=0;i<80;i++){
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random()*100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+      piece.style.animationDuration = (2.5 + Math.random()*1.5) + 's';
+      piece.style.animationDelay = (Math.random()*0.6) + 's';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 5000);
+    }
+  }
+
+  renderQuestion();
+</script>
+</body>
+</html>
