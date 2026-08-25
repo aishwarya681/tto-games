@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>University of Oklahoma — Tech Transfer Word Hunt</title>
+<style>
+  :root{
+    --nau-blue:#841617;
+    --nau-blue-light:#af6868;
+    --nau-gold:#FDF9D8;
+    --teal:#0f9d9d;
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --found:#3fbf7f;
+    --selecting:#ffe28a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background:linear-gradient(180deg,var(--nau-blue) 0%, var(--nau-blue-light) 220px, var(--bg) 220px);
+    color:#1a1a2e;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+  }
+  header{
+    text-align:center;
+    color:#fff;
+    margin-bottom:22px;
+  }
+  header h1{
+    font-size:1.6rem;
+    margin:0 0 8px;
+    letter-spacing:.3px;
+  }
+  header .badge{
+    display:inline-block;
+    background:rgba(255,255,255,.92);
+    color:var(--nau-blue);
+    font-weight:700;
+    font-size:.72rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding:4px 12px;
+    border-radius:20px;
+    margin-bottom:10px;
+  }
+  header p.subtitle{
+    margin:0 auto;
+    max-width:520px;
+    font-size:.95rem;
+    opacity:.9;
+    line-height:1.4;
+  }
+  .stats{
+    display:flex;
+    justify-content:center;
+    gap:18px;
+    margin-top:14px;
+    font-weight:600;
+  }
+  .stats span{
+    background:rgba(255,255,255,.12);
+    padding:6px 14px;
+    border-radius:8px;
+    font-size:.85rem;
+  }
+  .main{
+    background:var(--card);
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,20,60,.12);
+    padding:22px;
+    display:flex;
+    gap:26px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .grid-wrap{ flex:0 0 auto; }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(12, minmax(26px,34px));
+    grid-template-rows:repeat(12, minmax(26px,34px));
+    gap:3px;
+    user-select:none;
+    touch-action:none;
+  }
+  .cell{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#eef1f8;
+    border-radius:5px;
+    font-weight:700;
+    font-size:.82rem;
+    color:var(--nau-blue);
+    cursor:pointer;
+    transition:background .1s, color .1s, transform .08s;
+  }
+  .cell.selecting{
+    background:var(--selecting);
+  }
+  .cell.found{
+    background:var(--found);
+    color:#fff;
+  }
+  .wordlist{
+    flex:0 0 190px;
+  }
+  .wordlist h3{
+    margin:0 0 10px;
+    font-size:.95rem;
+    color:var(--nau-blue);
+  }
+  .wordlist ul{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .wordlist li{
+    font-size:.88rem;
+    font-weight:600;
+    color:#2c2c3a;
+    padding:6px 10px;
+    background:#eef1f8;
+    border-radius:6px;
+    letter-spacing:.03em;
+    transition:opacity .2s, text-decoration .2s;
+  }
+  .wordlist li.done{
+    background:transparent;
+    color:#9aa2b1;
+    text-decoration:line-through;
+  }
+  .wordlist li.mascot{
+    background:#fff6df;
+    border:1px dashed var(--nau-gold);
+  }
+  .wordlist li.mascot.done{
+    background:transparent;
+    border:1px dashed transparent;
+  }
+  .hint{
+    margin-top:14px;
+    font-size:.78rem;
+    color:#7a8090;
+    line-height:1.4;
+  }
+  .unlock{
+    position:fixed;
+    inset:0;
+    background:rgba(0,15,45,.72);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .unlock.hidden{ display:none; }
+  .unlock-card{
+    background:#fff;
+    border-radius:18px;
+    max-width:520px;
+    width:100%;
+    padding:34px 30px;
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    position:relative;
+    z-index:2;
+  }
+  .unlock-card h2{
+    color:var(--nau-blue);
+    margin:0 0 6px;
+    font-size:1.35rem;
+  }
+  .unlock-card .time-badge{
+    display:inline-block;
+    margin-bottom:14px;
+    background:#eef1f8;
+    color:var(--nau-blue);
+    font-size:.78rem;
+    font-weight:700;
+    padding:4px 12px;
+    border-radius:20px;
+  }
+  .unlock-card p{
+    font-size:.95rem;
+    line-height:1.55;
+    color:#333;
+    text-align:left;
+  }
+  .points{
+    text-align:left;
+    margin:16px 0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .points div{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    font-size:.9rem;
+    line-height:1.4;
+  }
+  .points div .dot{
+    flex:0 0 auto;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--nau-blue);
+    color:#fff;
+    font-weight:800;
+    font-size:.78rem;
+    display:flex;align-items:center;justify-content:center;
+    margin-top:1px;
+  }
+  .cta{
+    display:inline-block;
+    margin-top:18px;
+    background:var(--nau-blue);
+    color:#fff;
+    text-decoration:none;
+    font-weight:700;
+    padding:12px 26px;
+    border-radius:10px;
+    font-size:.92rem;
+    transition:background .15s;
+  }
+  .cta:hover{ background:var(--nau-blue-light); }
+  .confetti-piece{
+    position:fixed;
+    top:-10px;
+    width:9px;height:14px;
+    z-index:1;
+    opacity:.9;
+    border-radius:2px;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform:translateY(105vh) rotate(400deg); opacity:.3; }
+  }
+  @media (max-width:520px){
+    .grid{ grid-template-columns:repeat(12, minmax(20px,24px)); grid-template-rows:repeat(12, minmax(20px,24px)); }
+    .cell{ font-size:.62rem; }
+    .wordlist{ flex:1 1 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge">Built for University of Oklahoma</div>
+    <h1>Tech Transfer Word Hunt</h1>
+    <p class="subtitle">Find 4 core parts of your office — plus one bonus word — in under 2 minutes to unlock something built specifically for Oklahoma's team.</p>
+    <div class="stats">
+      <span id="timer">00:00</span>
+      <span id="foundCount">0/5 found</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="grid-wrap"><div id="grid" class="grid"></div></div>
+    <div class="wordlist">
+      <h3>Find these terms:</h3>
+      <ul id="wordList"></ul>
+      <p class="hint">Click and drag across letters (any direction, including diagonals) to select a word. Psst — one of these isn't like the others. 🐐</p>
+    </div>
+  </div>
+</div>
+
+<div id="unlock" class="unlock hidden">
+  <div class="unlock-card">
+    <div class="time-badge" id="finalTime">Solved in 00:00</div>
+    <h2>🔓 Unlocked for Oklahoma's Sooners</h2>
+    <p>You just found the four things every tech transfer office has to keep moving — disclosures, patents, licensing, and startups — plus your mascot. Here's what we're curious about for a team Oklahoma's size:</p>
+    <div class="points">
+      <div><span class="dot">?</span> <span>What if new disclosures didn't sit in a queue waiting on one person's bandwidth?</span></div>
+      <div><span class="dot">?</span> <span>What if the prior art and IP landscaping behind every patent decision took hours instead of weeks?</span></div>
+      <div><span class="dot">?</span> <span>What if licensing conversations moved at the speed of the deal, not the speed of your inbox?</span></div>
+      <div><span class="dot">?</span> <span>What if supporting more faculty startups didn't mean adding headcount?</span></div>
+    </div>
+    <p>If any of these sound like hurdles for your office, let's talk.</p>
+    <a class="cta" href="https://tradespace.chilipiper.com/once/34d3d673-0e02-4b03-b162-70b2cccd28ae" target="_blank" rel="noopener">Let's talk →</a>
+  </div>
+</div>
+
+<script>
+  // 4 core aspects of a TTO's workflow, plus a bonus 5th word: the school mascot
+  const WORDS = ["DISCLOSURE","PATENTS","LICENSING","STARTUPS","SOONERS"];
+  const MASCOT_WORD = "SOONERS";
+  const SIZE = 12;
+  const DIRECTIONS = [
+    [1,0],[-1,0],[0,1],[0,-1],
+    [1,1],[1,-1],[-1,1],[-1,-1]
+  ];
+
+  let grid = [];
+  let wordPaths = {}; // word -> array of {r,c}
+  let foundWords = new Set();
+  let selecting = false;
+  let startCell = null;
+  let currentPath = [];
+  let timerInterval = null;
+  let seconds = 0;
+  let started = false;
+
+  function emptyGrid(){
+    grid = Array.from({length:SIZE}, () => Array(SIZE).fill(null));
+  }
+
+  function tryPlaceWord(word){
+    const attempts = 300;
+    for(let a=0;a<attempts;a++){
+      const dir = DIRECTIONS[Math.floor(Math.random()*DIRECTIONS.length)];
+      const startR = Math.floor(Math.random()*SIZE);
+      const startC = Math.floor(Math.random()*SIZE);
+      const endR = startR + dir[1]*(word.length-1);
+      const endC = startC + dir[0]*(word.length-1);
+      if(endR < 0 || endR >= SIZE || endC < 0 || endC >= SIZE) continue;
+
+      let fits = true;
+      const path = [];
+      for(let i=0;i<word.length;i++){
+        const r = startR + dir[1]*i;
+        const c = startC + dir[0]*i;
+        const existing = grid[r][c];
+        if(existing !== null && existing !== word[i]){ fits = false; break; }
+        path.push({r,c});
+      }
+      if(!fits) continue;
+
+      path.forEach((p,i) => { grid[p.r][p.c] = word[i]; });
+      wordPaths[word] = path;
+      return true;
+    }
+    return false;
+  }
+
+  function fillRandomLetters(){
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for(let r=0;r<SIZE;r++){
+      for(let c=0;c<SIZE;c++){
+        if(grid[r][c] === null){
+          grid[r][c] = letters[Math.floor(Math.random()*letters.length)];
+        }
+      }
+    }
+  }
+
+  function buildPuzzle(){
+    emptyGrid();
+    wordPaths = {};
+    // place longest words first for a better fit rate
+    const sorted = [...WORDS].sort((a,b)=>b.length-a.length);
+    sorted.forEach(w => tryPlaceWord(w));
+    fillRandomLetters();
+  }
+
+  function renderGrid(){
+    const gridEl = document.getElementById('grid');
+    gridEl.innerHTML = '';
+    for(let r=0;r<SIZE;r++){
+      for(let c=0;c<SIZE;c++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = grid[r][c];
+        cell.dataset.r = r;
+        cell.dataset.c = c;
+        gridEl.appendChild(cell);
+      }
+    }
+  }
+
+  function renderWordList(){
+    const ul = document.getElementById('wordList');
+    ul.innerHTML = '';
+    WORDS.forEach(w => {
+      const li = document.createElement('li');
+      li.textContent = (w === MASCOT_WORD) ? (w + ' 🤠') : w;
+      li.id = 'w-' + w;
+      if(w === MASCOT_WORD) li.classList.add('mascot');
+      ul.appendChild(li);
+    });
+  }
+
+  function cellEl(r,c){
+    return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+  }
+
+  function clearSelectingClass(){
+    document.querySelectorAll('.cell.selecting').forEach(el => el.classList.remove('selecting'));
+  }
+
+  function computePath(start, end){
+    const dr = end.r - start.r;
+    const dc = end.c - start.c;
+    const steps = Math.max(Math.abs(dr), Math.abs(dc));
+    if(steps === 0) return [start];
+    const validLine = (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc));
+    if(!validLine) return null;
+    const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+    const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+    const path = [];
+    for(let i=0;i<=steps;i++){
+      path.push({ r: start.r + stepR*i, c: start.c + stepC*i });
+    }
+    return path;
+  }
+
+  function pathToWord(path){
+    return path.map(p => grid[p.r][p.c]).join('');
+  }
+
+  function startTimer(){
+    if(started) return;
+    started = true;
+    timerInterval = setInterval(() => {
+      seconds++;
+      const m = String(Math.floor(seconds/60)).padStart(2,'0');
+      const s = String(seconds%60).padStart(2,'0');
+      document.getElementById('timer').textContent = `${m}:${s}`;
+    }, 1000);
+  }
+
+  function stopTimer(){
+    clearInterval(timerInterval);
+  }
+
+  function checkWin(){
+    document.getElementById('foundCount').textContent = `${foundWords.size}/${WORDS.length} found`;
+    if(foundWords.size === WORDS.length){
+      stopTimer();
+      const m = String(Math.floor(seconds/60)).padStart(2,'0');
+      const s = String(seconds%60).padStart(2,'0');
+      document.getElementById('finalTime').textContent = `Solved in ${m}:${s}`;
+      setTimeout(() => {
+        document.getElementById('unlock').classList.remove('hidden');
+        launchConfetti();
+      }, 400);
+    }
+  }
+
+  function markFound(word, path){
+    foundWords.add(word);
+    path.forEach(p => cellEl(p.r,p.c).classList.add('found'));
+    const li = document.getElementById('w-' + word);
+    if(li) li.classList.add('done');
+  }
+
+  function handlePointerDown(e){
+    const target = e.target.closest('.cell');
+    if(!target) return;
+    startTimer();
+    selecting = true;
+    startCell = { r: +target.dataset.r, c: +target.dataset.c };
+    currentPath = [startCell];
+    clearSelectingClass();
+    target.classList.add('selecting');
+  }
+
+  function handlePointerMove(e){
+    if(!selecting) return;
+    const point = e.touches ? e.touches[0] : e;
+    const el = document.elementFromPoint(point.clientX, point.clientY);
+    const target = el && el.closest('.cell');
+    if(!target) return;
+    const current = { r: +target.dataset.r, c: +target.dataset.c };
+    const path = computePath(startCell, current);
+    if(!path) return;
+    clearSelectingClass();
+    path.forEach(p => {
+      const el2 = cellEl(p.r,p.c);
+      if(el2) el2.classList.add('selecting');
+    });
+    currentPath = path;
+  }
+
+  function handlePointerUp(){
+    if(!selecting) return;
+    selecting = false;
+    const word = pathToWord(currentPath);
+    const reversed = word.split('').reverse().join('');
+    const match = WORDS.find(w => (w === word || w === reversed) && !foundWords.has(w));
+    if(match){
+      markFound(match, currentPath);
+      checkWin();
+    } else {
+      clearSelectingClass();
+    }
+    currentPath = [];
+  }
+
+  function launchConfetti(){
+    const colors = ['#FDF9D8','#841617','#af6868','#3fbf7f','#ffffff'];
+    for(let i=0;i<80;i++){
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random()*100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+      piece.style.animationDuration = (2.5 + Math.random()*1.5) + 's';
+      piece.style.animationDelay = (Math.random()*0.6) + 's';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 5000);
+    }
+  }
+
+  function init(){
+    buildPuzzle();
+    renderGrid();
+    renderWordList();
+
+    const gridEl = document.getElementById('grid');
+    gridEl.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    // touch fallback
+    gridEl.addEventListener('touchstart', handlePointerDown, {passive:true});
+    gridEl.addEventListener('touchmove', handlePointerMove, {passive:true});
+    gridEl.addEventListener('touchend', handlePointerUp);
+  }
+
+  init();
+</script>
+</body>
+</html>
